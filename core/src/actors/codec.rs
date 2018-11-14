@@ -5,24 +5,18 @@ use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 
 use actix::Message;
 use bytes::BytesMut;
-use log::info;
+use log::debug;
 use tokio::codec::{Decoder, Encoder};
 
 const HEADER_SIZE: usize = 2; // bytes
 
 /// Message coming from the network
 #[derive(Debug, Message, Eq, PartialEq, Clone)]
-pub enum Request {
-    /// Request message
-    Message(BytesMut),
-}
+pub struct Request(pub BytesMut);
 
 /// Message going to the network
 #[derive(Debug, Message, Eq, PartialEq, Clone)]
-pub enum Response {
-    /// Response message
-    Message(BytesMut),
-}
+pub struct Response(pub BytesMut);
 
 /// Codec for client -> server transport
 ///
@@ -52,7 +46,7 @@ impl Decoder for P2PCodec {
             let msg_size = header_vec.read_u16::<BigEndian>().unwrap() as usize;
             if msg_len >= msg_size + HEADER_SIZE {
                 src.split_to(HEADER_SIZE);
-                ftb = Some(Request::Message(src.split_to(msg_size)));
+                ftb = Some(Request(src.split_to(msg_size)));
             }
         }
         // If the message is incomplete, return without consuming anything.
@@ -68,10 +62,10 @@ impl Encoder for P2PCodec {
     type Error = io::Error;
 
     /// Method to encode a response into bytes
-    fn encode(&mut self, msg: Response, dst: &mut BytesMut) -> Result<(), Self::Error> {
-        info!("Encoding {:?}", msg);
+    fn encode(&mut self, resp: Response, dst: &mut BytesMut) -> Result<(), Self::Error> {
+        debug!("Encoding {:?}", resp);
 
-        let Response::Message(bytes) = msg;
+        let Response(bytes) = resp;
 
         let mut encoded_msg = vec![];
 
