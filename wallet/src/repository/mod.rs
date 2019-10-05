@@ -2,6 +2,7 @@ mod error;
 mod keys;
 mod wallet;
 mod wallets;
+pub mod xwallets;
 
 pub use error::Error;
 pub use wallet::Wallet;

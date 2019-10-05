@@ -1,12 +1,12 @@
 use actix::prelude::*;
 
 use crate::actors::worker;
-use crate::model;
+use crate::models;
 
 pub struct WalletInfos;
 
 impl Message for WalletInfos {
-    type Result = worker::Result<Vec<model::Wallet>>;
+    type Result = worker::Result<Vec<models::Wallet>>;
 }
 
 impl Handler<WalletInfos> for worker::Worker {

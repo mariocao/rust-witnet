@@ -2,6 +2,7 @@ use std::result;
 use std::sync::Arc;
 
 use actix::prelude::*;
+use diesel::prelude::*;
 
 use crate::{db, params, repository, types};
 
@@ -16,6 +17,7 @@ pub type Result<T> = result::Result<T, Error>;
 
 pub struct Worker {
     db: Arc<rocksdb::DB>,
+    new_db: diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<SqliteConnection>>,
     wallets: Arc<repository::Wallets<db::PlainDb>>,
     params: params::Params,
     engine: types::SignEngine,

@@ -16,7 +16,11 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+#[macro_use]
+extern crate diesel;
+
 use actix::prelude::*;
+use diesel::prelude::*;
 use failure::Error;
 use jsonrpc_core as rpc;
 use jsonrpc_pubsub as pubsub;
@@ -30,8 +34,10 @@ mod constants;
 mod crypto;
 mod db;
 mod model;
+mod models;
 mod params;
 mod repository;
+mod schema;
 mod signal;
 mod types;
 
@@ -84,6 +90,7 @@ pub fn run(conf: Config) -> Result<(), Error> {
         ::rocksdb::DB::open(&rocksdb_opts, db_path.join(db_file_name))
             .map_err(|e| failure::format_err!("{}", e))?,
     );
+
     let params = params::Params {
         testnet,
         seed_password,
@@ -95,7 +102,21 @@ pub fn run(conf: Config) -> Result<(), Error> {
         db_salt_length,
     };
 
-    let worker = actors::Worker::start(concurrency, db.clone(), params);
+    // Sqlite "wallets" database.
+    let db_url = db_path
+        .join("wallets.sqlite3")
+        .to_str()
+        .unwrap()
+        .to_string();
+    let conn_mngr = diesel::r2d2::ConnectionManager::new(&db_url);
+    let pool: diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<SqliteConnection>> =
+        diesel::r2d2::Pool::builder().build(conn_mngr)?;
+
+    let conn = pool.get()?;
+
+    conn.execute(constants::WALLETS_MIGRATION)?;
+
+    let worker = actors::Worker::start(concurrency, db.clone(), pool, params);
 
     let app = actors::App::start(actors::app::Params {
         testnet,

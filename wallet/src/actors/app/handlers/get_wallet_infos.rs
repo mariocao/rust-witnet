@@ -3,14 +3,14 @@ use futures::future;
 use serde::{Deserialize, Serialize};
 
 use crate::actors::app;
-use crate::model;
+use crate::models;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WalletInfosRequest;
 
 #[derive(Debug, Serialize)]
 pub struct WalletInfosResponse {
-    pub infos: Vec<model::Wallet>,
+    pub infos: Vec<models::Wallet>,
 }
 
 impl Message for WalletInfosRequest {

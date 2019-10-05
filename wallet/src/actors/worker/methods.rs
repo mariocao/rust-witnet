@@ -5,15 +5,21 @@ use rayon::prelude::*;
 use serde_json::json;
 
 use super::*;
-use crate::{account, constants, crypto, db::Database as _, model, params};
+use crate::{account, constants, crypto, db::Database as _, model, models, params};
 
 impl Worker {
-    pub fn start(concurrency: usize, db: Arc<rocksdb::DB>, params: params::Params) -> Addr<Self> {
+    pub fn start(
+        concurrency: usize,
+        db: Arc<rocksdb::DB>,
+        new_db: diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<SqliteConnection>>,
+        params: params::Params,
+    ) -> Addr<Self> {
         let engine = types::SignEngine::signing_only();
         let wallets = Arc::new(repository::Wallets::new(db::PlainDb::new(db.clone())));
 
         SyncArbiter::start(concurrency, move || Self {
             db: db.clone(),
+            new_db: new_db.clone(),
             wallets: wallets.clone(),
             params: params.clone(),
             rng: rand::rngs::OsRng,
@@ -58,8 +64,9 @@ impl Worker {
         Ok(())
     }
 
-    pub fn wallet_infos(&self) -> Result<Vec<model::Wallet>> {
-        let wallets = self.wallets.infos()?;
+    pub fn wallet_infos(&self) -> Result<Vec<models::Wallet>> {
+        let conn = self.new_db.get().unwrap();
+        let wallets = repository::xwallets::list(&conn)?;
 
         Ok(wallets)
     }
@@ -71,6 +78,24 @@ impl Worker {
         password: &[u8],
         source: &types::SeedSource,
     ) -> Result<String> {
+        let conn = self.new_db.get().unwrap();
+        let _id = repository::xwallets::create(
+            &conn,
+            "wallet-123",
+            name.as_ref().map(String::as_str),
+            caption.as_ref().map(String::as_str),
+        )?;
+        // let db_url = db_path
+        //     .join("wallets.sqlite3")
+        //     .to_str()
+        //     .unwrap()
+        //     .to_string();
+        // let conn_mngr = diesel::r2d2::ConnectionManager::new(&db_url);
+        // let pool: diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<SqliteConnection>> =
+        //     diesel::r2d2::Pool::builder().build(conn_mngr)?;
+
+        // let conn = pool.get()?;
+
         let master_key = crypto::gen_master_key(
             self.params.seed_password.as_ref(),
             self.params.master_key_salt.as_ref(),

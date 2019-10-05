@@ -33,3 +33,12 @@ pub static ENCRYPTION_CHECK_KEY: &str = "ENC_KEY";
 
 /// Special value stored with `ENCRYPTION_CHECK_KEY`.
 pub static ENCRYPTION_CHECK_VALUE: () = ();
+
+pub static WALLETS_MIGRATION: &str = "
+CREATE TABLE IF NOT EXISTS wallets (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  database VARCHAR NOT NULL,
+  name VARCHAR,
+  caption VARCHAR
+)
+";

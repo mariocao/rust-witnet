@@ -3,7 +3,7 @@ use futures::future;
 
 use super::*;
 use crate::actors::*;
-use crate::{crypto, model, repository, types::Hashable as _};
+use crate::{crypto, model, models, repository, types::Hashable as _};
 use witnet_data_structures::chain::InventoryItem;
 
 impl App {
@@ -181,7 +181,7 @@ impl App {
     }
 
     /// Get public info of all the wallets stored in the database.
-    pub fn wallet_infos(&self) -> ResponseFuture<Vec<model::Wallet>> {
+    pub fn wallet_infos(&self) -> ResponseFuture<Vec<models::Wallet>> {
         let f = self
             .params
             .worker

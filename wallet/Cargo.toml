@@ -6,24 +6,28 @@ version = "0.3.2"
 workspace = ".."
 
 [dependencies]
+actix = "0.8.3"
 async-jsonrpc-client = { git = "https://github.com/witnet/async-jsonrpc-client", features = ["tcp"] }
 bincode = "1.1.3"
-log = "0.4.6"
-jsonrpc-core = "11.0.0"
+chrono = "0.4.9"
+diesel = { version = "1.4.2", features = ["default", "extras", "sqlite"] }
+diesel_migrations = "1.4.0"
+failure = "0.1.5"
 futures = "0.1.26"
+hamt-rs = "0.3.0"
+hex = "0.3.2"
+jsonrpc-core = "11.0.0"
+jsonrpc-pubsub = "11.0.0"
+libsqlite3-sys = { version = ">=0.8.0, <0.16.0", features = ["sqlcipher"] }
+log = "0.4.6"
+num_cpus = "1.10.0"
+rand = "0.7.0"
+rayon = "1.0.3"
+rocksdb = "0.12.2"
 serde = { version = "1.0.90", features = ["derive", "rc"] }
 serde_json = "1.0.39"
-rocksdb = "0.12.2"
-rayon = "1.0.3"
-num_cpus = "1.10.0"
-jsonrpc-pubsub = "11.0.0"
-actix = "0.8.3"
 tokio-signal = "0.2.7"
-failure = "0.1.5"
-hex = "0.3.2"
-rand = "0.7.0"
-hamt-rs = "0.3.0"
-chrono = "0.4.9"
+uuid = "0.7.4"
 
 witnet_net = { path = "../net" }
 witnet_config = { path = "../config", features = ["with-rocksdb"] }
