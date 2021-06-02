@@ -11,10 +11,12 @@ const FIRST_EMERGENCY_COMMITTEE: [&str; 7] = [
     "wit1etherz02v4fvqty6jhdawefd0pl33qtevy7s4z",
 ];
 
-/// 22 January 2021 @ 09:00:00 UTC
+/// 22 January 2021 @ 09:00:00 UTC  1611306000
 pub const FIRST_HARD_FORK: Epoch = 192000;
 /// 28 April 2021 @ 9:00:00 UTC
 pub const SECOND_HARD_FORK: Epoch = 376320;
+/// 4 June 2021  @ 9:00:00 UTC
+pub const THIRD_HARD_FORK: Epoch = 447360;
 
 /// Return a hard-coded signing committee if the provided epoch belongs to an emergency period.
 /// 750 and 1344: Between those indices, a special committee of 7 nodes was set.
@@ -43,6 +45,12 @@ pub fn after_first_hard_fork(epoch: Epoch, environment: Environment) -> bool {
 pub fn after_second_hard_fork(epoch: Epoch, environment: Environment) -> bool {
     epoch >= SECOND_HARD_FORK && Environment::Mainnet == environment
 }
+
+/// Returns a boolean indicating whether the epoch provided is after the third hard fork date
+pub fn after_third_hard_fork(epoch: Epoch, environment: Environment) -> bool {
+    epoch >= THIRD_HARD_FORK && Environment::Mainnet == environment
+}
+
 
 #[cfg(test)]
 mod tests {

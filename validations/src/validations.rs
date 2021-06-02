@@ -47,6 +47,7 @@ use witnet_rad::{
     },
     types::{array::RadonArray, serial_iter_decode, RadonType, RadonTypes},
 };
+use witnet_data_structures::mainnet_validations::after_third_hard_fork;
 
 /// Returns the fee of a value transfer transaction.
 ///
@@ -130,7 +131,7 @@ pub fn validate_commit_collateral(
                 output_pkh: vt_output.pkh,
                 proof_pkh: commit_pkh,
             }
-            .into());
+                .into());
         }
 
         // Verify that commits are only accepted after the time lock expired
@@ -141,7 +142,7 @@ pub fn validate_commit_collateral(
                 expected: vt_time_lock,
                 current: epoch_timestamp,
             }
-            .into());
+                .into());
         }
 
         // Outputs to be spent in commitment inputs need to be older than `block_number_limit`.
@@ -156,7 +157,7 @@ pub fn validate_commit_collateral(
                 must_be_older_than: collateral_age,
                 found: block_number - included_in_block_number,
             }
-            .into());
+                .into());
         }
 
         if !seen_output_pointers.insert(input.output_pointer()) {
@@ -164,7 +165,7 @@ pub fn validate_commit_collateral(
             return Err(TransactionError::OutputNotFound {
                 output: input.output_pointer().clone(),
             }
-            .into());
+                .into());
         }
 
         in_value = in_value
@@ -179,14 +180,14 @@ pub fn validate_commit_collateral(
             input_value: in_value,
             output_value: out_value,
         }
-        .into())
+            .into())
     } else if in_value - out_value != required_collateral {
         let found_collateral = in_value - out_value;
         Err(TransactionError::IncorrectCollateral {
             expected: required_collateral,
             found: found_collateral,
         }
-        .into())
+            .into())
     } else {
         Ok(())
     }
@@ -206,7 +207,7 @@ pub fn validate_mint_transaction(
             mint_epoch: mint_tx.epoch,
             block_epoch,
         }
-        .into());
+            .into());
     }
 
     let mint_value = transaction_outputs_sum(&mint_tx.outputs)?;
@@ -218,7 +219,7 @@ pub fn validate_mint_transaction(
             fees_value: total_fees,
             reward_value: block_reward_value,
         }
-        .into());
+            .into());
     }
 
     if mint_tx.outputs.len() > 2 {
@@ -231,7 +232,7 @@ pub fn validate_mint_transaction(
                 tx_hash: mint_tx.hash(),
                 output_id: idx,
             }
-            .into());
+                .into());
         }
     }
 
@@ -552,10 +553,10 @@ pub fn construct_report_from_clause_result(
         // The reveals passed the precondition clause (a parametric majority of them were successful
         // values). Run the tally, which will add more liars if any.
         Ok(TallyPreconditionClauseResult::MajorityOfValues {
-            values,
-            liars,
-            errors,
-        }) => {
+               values,
+               liars,
+               errors,
+           }) => {
             let mut metadata = TallyMetaData::default();
             metadata.update_liars(vec![false; reports_len]);
 
@@ -625,7 +626,7 @@ pub fn validate_vt_transaction<'a>(
             weight: vt_tx.weight(),
             max_weight: max_vt_weight,
         }
-        .into());
+            .into());
     }
 
     validate_transaction_signature(
@@ -641,7 +642,7 @@ pub fn validate_vt_transaction<'a>(
         return Err(TransactionError::NoInputs {
             tx_hash: vt_tx.hash(),
         }
-        .into());
+            .into());
     }
 
     // A value transfer output cannot have zero value
@@ -651,7 +652,7 @@ pub fn validate_vt_transaction<'a>(
                 tx_hash: vt_tx.hash(),
                 output_id: idx,
             }
-            .into());
+                .into());
         }
     }
 
@@ -720,7 +721,7 @@ pub fn validate_dr_transaction<'a>(
             max_weight: max_dr_weight,
             dr_output: dr_tx.body.dr_output.clone(),
         }
-        .into());
+            .into());
     }
 
     validate_transaction_signature(
@@ -737,7 +738,7 @@ pub fn validate_dr_transaction<'a>(
             outputs: dr_tx.body.outputs.len(),
             expected_outputs: 1,
         }
-        .into());
+            .into());
     }
 
     // A data request with 0 inputs can only be valid if the total cost of the data request is 0,
@@ -755,7 +756,7 @@ pub fn validate_dr_transaction<'a>(
                 tx_hash: dr_tx.hash(),
                 output_id: 0,
             }
-            .into());
+                .into());
         }
 
         // The output must have the same pkh as the first input
@@ -769,7 +770,7 @@ pub fn validate_dr_transaction<'a>(
                 expected_pkh,
                 signature_pkh: dr_output.pkh,
             }
-            .into());
+                .into());
         }
     } else {
         // 0 outputs: nothing to validate
@@ -786,7 +787,7 @@ pub fn validate_dr_transaction<'a>(
             value: dr_tx.body.dr_output.collateral,
             min: collateral_minimum,
         }
-        .into());
+            .into());
     }
 
     validate_rad_request(&dr_tx.body.dr_output.data_request)?;
@@ -861,14 +862,14 @@ pub fn validate_commit_transaction(
                 tx_hash: co_tx.hash(),
                 output_id: 0,
             }
-            .into());
+                .into());
         }
         if output.pkh != proof_pkh {
             return Err(TransactionError::PublicKeyHashMismatch {
                 expected_pkh: proof_pkh,
                 signature_pkh: output.pkh,
             }
-            .into());
+                .into());
         }
     }
 
@@ -897,7 +898,7 @@ pub fn validate_commit_transaction(
                 expected: dr_time_lock,
                 current: epoch_timestamp,
             }
-            .into());
+                .into());
         }
     }
 
@@ -910,7 +911,7 @@ pub fn validate_commit_transaction(
             expected_pkh: proof_pkh,
             signature_pkh: sign_pkh,
         }
-        .into());
+            .into());
     }
 
     let pkh = proof_pkh;
@@ -958,7 +959,7 @@ pub fn validate_reveal_transaction(
             expected_pkh: pkh2,
             signature_pkh: pkh,
         }
-        .into());
+            .into());
     }
 
     if dr_state.info.reveals.contains_key(&pkh) {
@@ -1135,7 +1136,7 @@ pub fn validate_tally_transaction<'a>(
             expected: sorted_expected_out_of_consensus,
             found: sorted_out_of_consensus,
         }
-        .into());
+            .into());
     }
 
     let sorted_error = ta_tx.error_committers.iter().cloned().sorted().collect();
@@ -1151,7 +1152,7 @@ pub fn validate_tally_transaction<'a>(
             expected: sorted_expected_error,
             found: sorted_error,
         }
-        .into());
+            .into());
     }
 
     // Validation of outputs number
@@ -1160,7 +1161,7 @@ pub fn validate_tally_transaction<'a>(
             expected_outputs: expected_ta_tx.outputs.len(),
             outputs: ta_tx.outputs.len(),
         }
-        .into());
+            .into());
     }
 
     // Validation of tally result
@@ -1169,7 +1170,7 @@ pub fn validate_tally_transaction<'a>(
             expected_tally: expected_ta_tx.tally,
             miner_tally: ta_tx.tally.clone(),
         }
-        .into());
+            .into());
     }
 
     let commits_count = dr_state.info.commits.len();
@@ -1220,7 +1221,7 @@ pub fn validate_tally_transaction<'a>(
                     change: output.value,
                     expected_change: expected_tally_change,
                 }
-                .into());
+                    .into());
             }
         } else {
             if is_after_second_hard_fork {
@@ -1244,7 +1245,7 @@ pub fn validate_tally_transaction<'a>(
                             value: output.value,
                             expected_value: collateral,
                         }
-                        .into());
+                            .into());
                     }
                     // Validation of the reward is according to the DataRequestOutput
                     if !sorted_out_of_consensus.contains(&output.pkh) && output.value != reward {
@@ -1252,7 +1253,7 @@ pub fn validate_tally_transaction<'a>(
                             value: output.value,
                             expected_value: reward,
                         }
-                        .into());
+                            .into());
                     }
                 } else {
                     // Make sure every rewarded address is a committer
@@ -1265,7 +1266,7 @@ pub fn validate_tally_transaction<'a>(
                             value: output.value,
                             expected_value: collateral,
                         }
-                        .into());
+                            .into());
                     }
                 }
             } else {
@@ -1292,7 +1293,7 @@ pub fn validate_tally_transaction<'a>(
                         value: output.value,
                         expected_value: collateral,
                     }
-                    .into());
+                        .into());
                 }
                 // Validation of the reward is according to the DataRequestOutput
                 if !sorted_out_of_consensus.contains(&output.pkh) && output.value != reward {
@@ -1300,7 +1301,7 @@ pub fn validate_tally_transaction<'a>(
                         value: output.value,
                         expected_value: reward,
                     }
-                    .into());
+                        .into());
                 }
             }
 
@@ -1316,7 +1317,7 @@ pub fn validate_tally_transaction<'a>(
                 current: output.time_lock,
                 expected: 0,
             }
-            .into());
+                .into());
         }
         total_tally_value += output.value;
     }
@@ -1340,7 +1341,7 @@ pub fn validate_tally_transaction<'a>(
             value: found_dr_value,
             expected_value: expected_dr_value + expected_collateral_value,
         }
-        .into());
+            .into());
     }
 
     Ok((ta_tx.outputs.iter().collect(), tally_extra_fee))
@@ -1358,7 +1359,7 @@ pub fn validate_block_signature(
             proof_pkh,
             signature_pkh,
         }
-        .into());
+            .into());
     }
 
     let keyed_signature = &block.block_sig;
@@ -1388,7 +1389,7 @@ pub fn validate_pkh_signature(
                 expected_pkh,
                 signature_pkh,
             }
-            .into());
+                .into());
         }
     }
     Ok(())
@@ -1468,7 +1469,7 @@ pub fn validate_commit_reveal_signature<'a>(
             signatures_n: u8::try_from(signatures.len())?,
             inputs_n: 1,
         }
-        .into());
+            .into());
     }
 
     let Hash::SHA256(message) = tx_hash;
@@ -1507,7 +1508,7 @@ pub fn validate_transaction_signature(
             signatures_n: u8::try_from(signatures.len())?,
             inputs_n: u8::try_from(inputs.len())?,
         }
-        .into());
+            .into());
     }
 
     let tx_hash_bytes = match tx_hash {
@@ -1548,6 +1549,7 @@ struct WitnessesCount {
     current: u32,
     target: u32,
 }
+
 type WitnessesCounter<S> = HashMap<Hash, WitnessesCount, S>;
 
 // Add 1 in the number assigned to a OutputPointer
@@ -1634,9 +1636,9 @@ pub fn validate_block_transactions(
     // So the total amount is always representable by a u64
     let max_total_value_genesis = u64::max_value()
         - total_block_reward(
-            consensus_constants.initial_block_reward,
-            consensus_constants.halving_period,
-        );
+        consensus_constants.initial_block_reward,
+        consensus_constants.halving_period,
+    );
     let mut genesis_value_available = max_total_value_genesis;
 
     // TODO: replace for loop with a try_fold
@@ -1675,7 +1677,7 @@ pub fn validate_block_transactions(
                 weight: acc_weight,
                 max_weight: consensus_constants.max_vt_weight,
             }
-            .into());
+                .into());
         }
         vt_weight = acc_weight;
 
@@ -1738,7 +1740,7 @@ pub fn validate_block_transactions(
                 commits: *current,
                 rf: *target,
             }
-            .into());
+                .into());
         }
     }
 
@@ -1784,7 +1786,7 @@ pub fn validate_block_transactions(
                 expected_tally: tally_bytes_on_encode_error(),
                 miner_tally: tally_bytes_on_encode_error(),
             }
-            .into());
+                .into());
         }
 
         // Remove tally created from expected
@@ -1814,7 +1816,7 @@ pub fn validate_block_transactions(
             count: expected_tally_ready_drs.len(),
             block_hash: block.hash(),
         }
-        .into());
+            .into());
     }
 
     let mut dr_weight: u32 = 0;
@@ -1865,7 +1867,7 @@ pub fn validate_block_transactions(
                 weight: acc_weight,
                 max_weight: consensus_constants.max_dr_weight,
             }
-            .into());
+                .into());
         }
         dr_weight = acc_weight;
     }
@@ -1926,19 +1928,19 @@ pub fn validate_block(
             block_epoch,
             current_epoch,
         }
-        .into())
+            .into())
     } else if chain_beacon.checkpoint > block_epoch {
         Err(BlockError::BlockOlderThanTip {
             chain_epoch: chain_beacon.checkpoint,
             block_epoch,
         }
-        .into())
+            .into())
     } else if chain_beacon.hash_prev_block != hash_prev_block {
         Err(BlockError::PreviousHashMismatch {
             block_hash: hash_prev_block,
             our_hash: chain_beacon.hash_prev_block,
         }
-        .into())
+            .into())
     } else if chain_beacon.hash_prev_block == consensus_constants.bootstrap_hash {
         // If the chain_beacon hash_prev_block is the bootstrap hash, only accept blocks
         // with the genesis_block_hash
@@ -2026,7 +2028,7 @@ pub fn validate_new_transaction(
             signatures_to_verify,
             max_vt_weight,
         )
-        .map(|(_, _, fee)| fee),
+            .map(|(_, _, fee)| fee),
 
         Transaction::DataRequest(tx) => validate_dr_transaction(
             &tx,
@@ -2037,7 +2039,7 @@ pub fn validate_new_transaction(
             collateral_minimum,
             max_dr_weight,
         )
-        .map(|(_, _, fee)| fee),
+            .map(|(_, _, fee)| fee),
         Transaction::Commit(tx) => validate_commit_transaction(
             &tx,
             &data_request_pool,
@@ -2051,7 +2053,7 @@ pub fn validate_new_transaction(
             collateral_age,
             block_number,
         )
-        .map(|(_, _, fee)| fee),
+            .map(|(_, _, fee)| fee),
         Transaction::Reveal(tx) => {
             validate_reveal_transaction(&tx, &data_request_pool, signatures_to_verify)
         }
@@ -2091,20 +2093,28 @@ pub fn calculate_reppoe_threshold(
     rep_eng: &ReputationEngine,
     pkh: &PublicKeyHash,
     num_witnesses: u16,
+    block_epoch: u32,
+    minimum_difficulty: u32,
 ) -> (Hash, f64) {
-    let total_active_rep = rep_eng.total_active_reputation();
-
     // Add 1 to reputation because otherwise a node with 0 reputation would
     // never be eligible for a data request
-    let my_reputation = u64::from(rep_eng.get_eligibility(pkh)) + 1;
+    let my_eligibility = u64::from(rep_eng.get_eligibility(pkh)) + 1;
     let factor = u64::from(rep_eng.threshold_factor(num_witnesses));
 
     let max = u64::max_value();
-    // Check for overflow: when the probability is more than 100%, cap it to 100%
-    let target = if my_reputation.saturating_mul(factor) >= total_active_rep {
-        max
+    // Compute target eligibility and hard-cap it if required
+    let target = if after_third_hard_fork(block_epoch, get_environment()) {
+        // TODO: Review if next line is required (check if total active reputation could be zero)
+        let total_active_rep = std::cmp::max(rep_eng.total_active_reputation(), 1);
+        // If eligibility is more than 100%, cap it to (max/minimum_difficulty*factor)%
+        std::cmp::min(
+            (max / u64::from(minimum_difficulty)),
+            (max / total_active_rep).saturating_mul(my_eligibility),
+        ).saturating_mul(factor)
     } else {
-        (max / total_active_rep) * my_reputation.saturating_mul(factor)
+        // Check for overflow: when the probability is more than 100%, cap it to 100%
+        let total_active_rep = rep_eng.total_active_reputation();
+        (max / total_active_rep).saturating_mul(my_eligibility).saturating_mul(factor)
     };
     let target = u32::try_from(target >> 32).unwrap();
 
@@ -2155,7 +2165,7 @@ impl VrfSlots {
                         minimum_difficulty,
                         epochs_with_minimum_difficulty,
                     )
-                    .0
+                        .0
                 })
                 .collect(),
         )
@@ -2174,14 +2184,14 @@ impl VrfSlots {
                 // return the number of sections
                 .unwrap_or(num_sections),
         )
-        .unwrap()
+            .unwrap()
     }
 }
 
 /// Function to calculate a merkle tree from a transaction vector
 pub fn merkle_tree_root<T>(transactions: &[T]) -> Hash
-where
-    T: Hashable,
+    where
+        T: Hashable,
 {
     let transactions_hashes: Vec<Sha256> = transactions
         .iter()
@@ -2222,7 +2232,8 @@ pub fn validate_merkle_tree(block: &Block) -> bool {
 
 /// 1 nanowit is the minimal unit of value
 /// 1 wit = 10^9 nanowits
-pub const NANOWITS_PER_WIT: u64 = 1_000_000_000; // 10 ^ WIT_DECIMAL_PLACES
+pub const NANOWITS_PER_WIT: u64 = 1_000_000_000;
+// 10 ^ WIT_DECIMAL_PLACES
 /// Number of decimal places used in the string representation of wit value.
 pub const WIT_DECIMAL_PLACES: u8 = 9;
 
@@ -2367,7 +2378,7 @@ pub fn verify_signatures(
                         vrf_hash,
                         target_hash,
                     }
-                    .into());
+                        .into());
                 }
                 vrf_hashes.push(vrf_hash);
             }
@@ -2385,7 +2396,7 @@ pub fn verify_signatures(
                         vrf_hash,
                         target_hash,
                     }
-                    .into());
+                        .into());
                 }
             }
             SignaturesToVerify::SecpTx {
@@ -2433,7 +2444,7 @@ pub fn verify_signatures(
                         .try_into()
                         .unwrap(),
                 )
-                .map_err(|e| e)?;
+                    .map_err(|e| e)?;
             }
         }
     }
@@ -2482,7 +2493,7 @@ mod tests {
                                         rep_2,
                                         vrf_j,
                                         act_j,
-                                        &vrf_sections
+                                        &vrf_sections,
                                     ),
                                     Ordering::Less
                                 );
@@ -2496,7 +2507,7 @@ mod tests {
                                         rep_1,
                                         vrf_j,
                                         act_j,
-                                        &vrf_sections
+                                        &vrf_sections,
                                     ),
                                     Ordering::Greater
                                 );
@@ -2522,7 +2533,7 @@ mod tests {
                                 rep_1,
                                 vrf_j,
                                 false,
-                                &vrf_sections
+                                &vrf_sections,
                             ),
                             Ordering::Greater
                         );
@@ -2536,7 +2547,7 @@ mod tests {
                                 rep_2,
                                 vrf_j,
                                 true,
-                                &vrf_sections
+                                &vrf_sections,
                             ),
                             Ordering::Less
                         );
@@ -2558,7 +2569,7 @@ mod tests {
                         rep_1,
                         vrf_2,
                         true,
-                        &vrf_sections
+                        &vrf_sections,
                     ),
                     Ordering::Greater
                 );
@@ -2572,7 +2583,7 @@ mod tests {
                         rep_1,
                         vrf_1,
                         true,
-                        &vrf_sections
+                        &vrf_sections,
                     ),
                     Ordering::Less
                 );
@@ -2590,7 +2601,7 @@ mod tests {
                 rep_1,
                 vrf_1,
                 true,
-                &vrf_sections
+                &vrf_sections,
             ),
             Ordering::Greater
         );
@@ -2604,7 +2615,7 @@ mod tests {
                 rep_1,
                 vrf_1,
                 true,
-                &vrf_sections
+                &vrf_sections,
             ),
             Ordering::Less
         );
@@ -2620,7 +2631,7 @@ mod tests {
                 rep_1,
                 vrf_1,
                 true,
-                &vrf_sections
+                &vrf_sections,
             ),
             Ordering::Equal
         );
@@ -2656,7 +2667,7 @@ mod tests {
                                         rep_j,
                                         vrf_2,
                                         act_j,
-                                        &vrf_sections
+                                        &vrf_sections,
                                     ),
                                     Ordering::Greater
                                 );
@@ -2670,7 +2681,7 @@ mod tests {
                                         rep_j,
                                         vrf_1,
                                         act_j,
-                                        &vrf_sections
+                                        &vrf_sections,
                                     ),
                                     Ordering::Less
                                 );
@@ -2704,7 +2715,7 @@ mod tests {
                 rep_2,
                 vrf_2,
                 true,
-                &vrf_sections
+                &vrf_sections,
             ),
             Ordering::Greater
         );
@@ -2719,7 +2730,7 @@ mod tests {
                 rep_2,
                 vrf_1,
                 true,
-                &vrf_sections
+                &vrf_sections,
             ),
             Ordering::Less
         );
@@ -2951,8 +2962,9 @@ mod tests {
 
         // 100% when we have all the reputation
         let (t00, p00) = calculate_reppoe_threshold(&rep_engine, &id1, 1);
+
+        assert_eq!(p00 * 100_f64, 100.00);
         assert_eq!(t00, Hash::with_first_u32(0xFFFF_FFFF));
-        assert_eq!((p00 * 100_f64).round() as i128, 100);
 
         let id2 = PublicKeyHash::from_bytes(&[2; 20]).unwrap();
         rep_engine
@@ -2980,9 +2992,9 @@ mod tests {
     #[test]
     // FIXME: Allow for now, wait for https://github.com/rust-lang/rust/issues/67058 to reach stable
     #[allow(
-        clippy::cast_possible_truncation,
-        clippy::cognitive_complexity,
-        clippy::cast_sign_loss
+    clippy::cast_possible_truncation,
+    clippy::cognitive_complexity,
+    clippy::cast_sign_loss
     )]
     fn target_reppoe_specific_example() {
         let mut rep_engine = ReputationEngine::new(1000);
@@ -3035,8 +3047,8 @@ mod tests {
 
         // 100% when the total reputation is 0
         let (t00, p00) = calculate_reppoe_threshold(&rep_engine, &id0, 1);
-        assert_eq!(t00, Hash::with_first_u32(0xFFFF_FFFF));
         assert_eq!((p00 * 100_f64).round() as i128, 100);
+        assert_eq!(t00, Hash::with_first_u32(0xFFFF_FFFF));
         let (t01, p01) = calculate_reppoe_threshold(&rep_engine, &id0, 100);
         assert_eq!(t01, Hash::with_first_u32(0xFFFF_FFFF));
         assert_eq!((p01 * 100_f64).round() as i128, 100);
@@ -3255,7 +3267,7 @@ mod tests {
             evaluate_tally_precondition_clause(v, 0.70, 4, E).unwrap();
 
         if let TallyPreconditionClauseResult::MajorityOfErrors { errors_mode } =
-            tally_precondition_clause_result
+        tally_precondition_clause_result
         {
             assert_eq!(errors_mode, rad_err);
         } else {
@@ -3318,7 +3330,7 @@ mod tests {
             evaluate_tally_precondition_clause(v, 0.40, 7, E).unwrap();
 
         if let TallyPreconditionClauseResult::MajorityOfErrors { errors_mode } =
-            tally_precondition_clause_result
+        tally_precondition_clause_result
         {
             assert_eq!(errors_mode, rad_err);
         } else {
@@ -3360,7 +3372,7 @@ mod tests {
             evaluate_tally_precondition_clause(v, 0.51, 4, E).unwrap();
 
         if let TallyPreconditionClauseResult::MajorityOfErrors { errors_mode } =
-            tally_precondition_clause_result
+        tally_precondition_clause_result
         {
             assert_eq!(errors_mode, rad_err);
         } else {
@@ -3388,7 +3400,7 @@ mod tests {
             out,
             RadError::InsufficientConsensus {
                 achieved: 0.5,
-                required: 0.51
+                required: 0.51,
             }
         );
     }
@@ -3415,7 +3427,7 @@ mod tests {
             out,
             RadError::InsufficientConsensus {
                 achieved: 0.5,
-                required: 0.51
+                required: 0.51,
             }
         );
     }
