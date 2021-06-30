@@ -31,6 +31,7 @@ pub struct DrSender {
     _handle: Option<EventLoopHandle>,
     wit_dr_sender_polling_rate_ms: u64,
     max_dr_value_nanowits: u64,
+    witnet_address: String,
 }
 
 /// Make actor from DrSender
@@ -55,14 +56,37 @@ impl actix::Supervised for DrSender {}
 /// Required trait for being able to retrieve DrSender address from system registry
 impl SystemService for DrSender {}
 
+/// TODO: doc
+pub struct TryReconnect;
+
+impl Message for TryReconnect {
+    type Result = ();
+}
+
+impl Handler<TryReconnect> for DrSender {
+    type Result = ();
+
+    fn handle(&mut self, _: TryReconnect, _ctx: &mut Self::Context) -> Self::Result {
+        let socket = TcpSocket::new(&self.witnet_address);
+        self.witnet_client = match socket {
+            Ok((_, client)) => Some(Arc::new(client)),
+            Err(_) => {
+                log::error!("Failed to connect to witnet client, will retry later");
+
+                None
+            }
+        };
+    }
+}
+
 impl DrSender {
     /// Initialize `PeersManager` taking the configuration from a `Config` structure
     pub fn from_config(config: &Config) -> Result<Self, String> {
         let max_dr_value_nanowits = config.max_dr_value_nanowits;
         let wit_dr_sender_polling_rate_ms = config.wit_dr_sender_polling_rate_ms;
-        let witnet_addr = config.witnet_jsonrpc_addr.to_string();
+        let witnet_address = config.witnet_jsonrpc_addr.to_string();
 
-        let (_handle, witnet_client) = TcpSocket::new(&witnet_addr).unwrap();
+        let (_handle, witnet_client) = TcpSocket::new(&witnet_address).unwrap();
         let witnet_client = Arc::new(witnet_client);
 
         Ok(Self {
@@ -70,10 +94,12 @@ impl DrSender {
             _handle: Some(_handle),
             wit_dr_sender_polling_rate_ms,
             max_dr_value_nanowits,
+            witnet_address,
         })
     }
 
     fn check_new_drs(&self, ctx: &mut Context<Self>, period: Duration) {
+        // TODO: Check unwrap()
         let witnet_client = self.witnet_client.clone().unwrap();
         let max_dr_value_nanowits = self.max_dr_value_nanowits;
 
@@ -122,7 +148,9 @@ impl DrSender {
                                     dr_id,
                                     e
                                 );
-                                continue;
+                                let dr_sender_addr = DrSender::from_registry();
+                                dr_sender_addr.send(TryReconnect).await.unwrap();
+                                break;
                             }
                         }
                     }

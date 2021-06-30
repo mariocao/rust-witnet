@@ -105,7 +105,7 @@ fn run(callback: fn()) -> Result<(), String> {
             check_ethereum_node_running(&config.eth_client_url)
                 .await
                 .expect("ethereum node not running");
-            check_witnet_node_running(&config)
+            check_witnet_node_running(&config.witnet_jsonrpc_addr.to_string())
                 .await
                 .expect("witnet node not running");
 

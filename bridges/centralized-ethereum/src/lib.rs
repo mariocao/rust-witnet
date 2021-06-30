@@ -34,9 +34,7 @@ pub fn create_wrb_contract(config: &Config) -> Contract<Http> {
 }
 
 /// Check if the witnet node is running
-pub async fn check_witnet_node_running(config: &Config) -> Result<(), String> {
-    let witnet_addr = config.witnet_jsonrpc_addr.to_string();
-
+pub async fn check_witnet_node_running(witnet_addr: &str) -> Result<(), String> {
     let (_handle, witnet_client) = TcpSocket::new(&witnet_addr).unwrap();
     let witnet_client = Arc::new(witnet_client);
     let res = witnet_client.execute("syncStatus", json!(null));
